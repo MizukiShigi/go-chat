@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>シンプルチャット</title>
+    <style>
+        #chat-container {
+            width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #messages {
+            height: 400px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        #message-form {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <form id="message-form">
+            <input type="text" id="message-input" placeholder="メッセージを入力...">
+            <button type="submit">送信</button>
+        </form>
+    </div>
+
+    <script>
+        // メッセージを表示する関数
+        function appendMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+            // 自動スクロール
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // WebSocket接続を確立
+        const ws = new WebSocket('ws://localhost:8081/ws');
+
+        ws.onopen = function() {
+            appendMessage('チャットに接続しました');
+        };
+
+        ws.onmessage = function(event) {
+            appendMessage(event.data);
+        };
+
+        ws.onclose = function() {
+            appendMessage('チャットから切断されました');
+        };
+
+        // メッセージ送信の処理
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const message = input.value;
+            
+            if (message.trim()) {
+                ws.send(message);
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
