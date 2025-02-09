@@ -28,6 +28,11 @@ func (up *UserPresence) UpdatePresence(ctx context.Context, userID string) error
 	return up.SetOnline(ctx, userID)
 }
 
+func (up *UserPresence) SetOffline(ctx context.Context, userID string) error {
+	key := fmt.Sprintf(keyOnlinePrefix+"%s", userID)
+    return up.Client.Del(ctx, key).Err()
+}
+
 func (up *UserPresence) IsOnline(ctx context.Context, userID string) (bool, error) {
 	key := fmt.Sprintf(keyOnlinePrefix+"%s", userID)
 	result, err := up.Client.Exists(ctx, key).Result()
