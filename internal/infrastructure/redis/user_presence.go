@@ -6,7 +6,10 @@ import (
 	"time"
 )
 
-const keyOnlinePrefix = "online:"
+const (
+	keyOnlinePrefix    = "online:"
+	PresenseTTLSeconds = 30
+)
 
 type UserPresence struct {
 	Client *Client
@@ -17,12 +20,16 @@ func NewUserPresence(client *Client) *UserPresence {
 }
 
 func (up *UserPresence) SetOnline(ctx context.Context, userID string) error {
-	key := fmt.Sprintf(keyOnlinePrefix + "%s", userID)
-	return up.Client.Set(ctx, key, true, 30*time.Second).Err()
+	key := fmt.Sprintf(keyOnlinePrefix+"%s", userID)
+	return up.Client.Set(ctx, key, true, PresenseTTLSeconds*time.Second).Err()
+}
+
+func (up *UserPresence) UpdatePresence(ctx context.Context, userID string) error {
+	return up.SetOnline(ctx, userID)
 }
 
 func (up *UserPresence) IsOnline(ctx context.Context, userID string) (bool, error) {
-	key := fmt.Sprintf(keyOnlinePrefix + "%s", userID)
+	key := fmt.Sprintf(keyOnlinePrefix+"%s", userID)
 	result, err := up.Client.Exists(ctx, key).Result()
 	if err != nil {
 		return false, err
@@ -31,7 +38,7 @@ func (up *UserPresence) IsOnline(ctx context.Context, userID string) (bool, erro
 }
 
 func (up *UserPresence) GetOnlineUsers(ctx context.Context) ([]string, error) {
-	keys, err := up.Client.Keys(ctx, keyOnlinePrefix + "*").Result()
+	keys, err := up.Client.Keys(ctx, keyOnlinePrefix+"*").Result()
 	if err != nil {
 		return nil, err
 	}

@@ -1,15 +1,21 @@
 package websocket
 
 import (
+	"context"
 	"log"
+	"time"
+
+	"mychat/internal/infrastructure/redis"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	Hub  *Hub
-	Conn *websocket.Conn
-	Send chan []byte
+	Hub      *Hub
+	Conn     *websocket.Conn
+	Send     chan []byte
+	UserID   string
+	Presence *redis.UserPresence
 }
 
 func (c *Client) ReadPump() {
@@ -42,6 +48,24 @@ func (c *Client) WritePump() {
 		}
 		w.Write(message)
 		if err := w.Close(); err != nil {
+			return
+		}
+	}
+}
+
+func (c *Client) MaintainPresence(ctx context.Context) {
+	// redisのttlより少し短めに設定
+	ticker := time.NewTicker((redis.PresenseTTLSeconds - 5) * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := c.Presence.UpdatePresence(ctx, c.UserID); err != nil {
+				log.Printf("failed to update presence: %v", err)
+				return
+			}
+		case <-ctx.Done():
 			return
 		}
 	}
