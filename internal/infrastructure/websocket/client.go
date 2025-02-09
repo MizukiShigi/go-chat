@@ -21,6 +21,7 @@ type Client struct {
 func (c *Client) ReadPump() {
 	defer func() {
 		c.Hub.Unregister <- c
+		c.Presence.SetOffline(context.Background(), c.UserID)
 		c.Conn.Close()
 	}()
 
@@ -61,6 +62,7 @@ func (c *Client) MaintainPresence(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
+			log.Println(c.UserID)
 			if err := c.Presence.UpdatePresence(ctx, c.UserID); err != nil {
 				log.Printf("failed to update presence: %v", err)
 				return
