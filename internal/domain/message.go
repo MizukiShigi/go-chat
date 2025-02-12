@@ -10,6 +10,7 @@ const (
 type Message struct {
 	Type    MessageType `json:"type"`
 	Content any         `json:"content"`
+	UserName string `json:"user_name"`
 }
 
 type ChatConten struct {
