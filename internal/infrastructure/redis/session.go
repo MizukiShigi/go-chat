@@ -20,7 +20,7 @@ func NewSession(client *Client) *Session {
 	return &Session{Client: client}
 }
 
-func (s *Session) CreateSession(ctx context.Context, userID string) (string, error) {
+func (s *Session) CreateSession(ctx context.Context, userID int) (string, error) {
 	sessionID := uuid.New().String()
 	key := keySessionPrefix + sessionID
 
@@ -32,11 +32,11 @@ func (s *Session) CreateSession(ctx context.Context, userID string) (string, err
 	return sessionID, nil
 }
 
-func (s *Session) GetSession(ctx context.Context, sessionID string) (string, error) {
+func (s *Session) GetSession(ctx context.Context, sessionID string) (int, error) {
 	key := keySessionPrefix + sessionID
-	userID, err := s.Client.Get(ctx, key).Result()
+	userID, err := s.Client.Get(ctx, key).Int()
 	if err != nil {
-        return "", err
+        return 0, err
     }
 
 	s.Client.Expire(ctx, key, SessionTTL)
